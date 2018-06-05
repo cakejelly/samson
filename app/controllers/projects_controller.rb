@@ -40,10 +40,17 @@ class ProjectsController < ApplicationController
       if Rails.application.config.samson.project_created_email
         ProjectMailer.created_email(@current_user, @project).deliver_now
       end
-      redirect_to @project
+      respond_to do |format|
+        format.html { redirect_to @project }
+        format.json { render json: @project.as_json, status: 201 }
+      end
+
       Rails.logger.info("#{@current_user.name_and_email} created a new project #{@project.to_param}")
     else
-      render :new
+      respond_to do |format|
+        format.html { render :new }
+        format.json { render json: {errors: @project.errors}.as_json, status: 422 }
+      end
     end
   end
 
@@ -71,7 +78,11 @@ class ProjectsController < ApplicationController
     if Rails.application.config.samson.project_deleted_email
       ProjectMailer.deleted_email(@current_user, @project).deliver_now
     end
-    redirect_to projects_path, notice: "Project removed."
+
+    respond_to do |format|
+      format.html { redirect_to projects_path, notice: "Project removed." }
+      format.json { head :no_content }
+    end
   end
 
   def deploy_group_versions
