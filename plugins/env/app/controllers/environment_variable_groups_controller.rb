@@ -5,6 +5,10 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def index
     @groups = EnvironmentVariableGroup.all
+    respond_to do |format|
+      format.html { @groups }
+      format.json { render json: @groups.as_json }
+    end
   end
 
   def new
@@ -14,11 +18,17 @@ class EnvironmentVariableGroupsController < ApplicationController
   def create
     group.attributes = attributes
     group.save!
-    redirect_to action: :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { render json: render_group_json(group), status: 201 }
+    end
   end
 
   def show
-    render 'form'
+    respond_to do |format|
+      format.html { render 'form' }
+      format.json { render json: render_group_json(@group) }
+    end
   end
 
   def update
@@ -28,7 +38,10 @@ class EnvironmentVariableGroupsController < ApplicationController
 
   def destroy
     group.destroy!
-    redirect_to action: :index
+    respond_to do |format|
+      format.html { redirect_to action: :index }
+      format.json { head :no_content }
+    end
   end
 
   def preview
@@ -55,6 +68,18 @@ class EnvironmentVariableGroupsController < ApplicationController
   end
 
   private
+
+  def render_group_json(group)
+    group.as_json.tap do |gr|
+      gr['environment_variables_attributes'] = render_env_variables(group)
+    end
+  end
+
+  def render_env_variables(group)
+    group.environment_variables.map do |env_var|
+      env_var.attributes.slice('id', 'name', 'value')
+    end
+  end
 
   def group
     @group ||= if ['new', 'create'].include?(action_name)
