@@ -21,10 +21,18 @@ class EnvironmentsController < ApplicationController
   def create
     @environment = Environment.create(env_params)
     if @environment.persisted?
-      flash[:notice] = "Successfully saved environment: #{@environment.name}"
-      redirect_to action: 'index'
+      respond_to do |format|
+        format.html do
+          flash[:notice] = "Successfully saved environment: #{@environment.name}"
+          redirect_to action: 'index'
+        end
+        format.json { render json: @environment.as_json, status: 201 }
+      end
     else
-      render 'show'
+      respond_to do |format|
+        format.html { render 'show' }
+        format.json { render json: {errors: @environment.errors}.as_json, status: 422 }
+      end
     end
   end
 
@@ -39,8 +47,13 @@ class EnvironmentsController < ApplicationController
 
   def destroy
     environment.soft_delete!(validate: false)
-    flash[:notice] = "Successfully deleted environment: #{environment.name}"
-    redirect_to action: 'index'
+    respond_to do |format|
+      format.html do
+        flash[:notice] = "Successfully deleted environment: #{environment.name}"
+        redirect_to action: 'index'
+      end
+      format.json { head :no_content }
+    end
   end
 
   private
