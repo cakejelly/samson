@@ -23,9 +23,15 @@ class UsersController < ApplicationController
     name = params.require(:user).require(:name)
     @user = User.new(name: name, integration: true)
     if @user.save
-      redirect_to @user, notice: "User created!"
+      respond_to do |format|
+        format.html { redirect_to @user, notice: "User created!" }
+        format.json { render json: @user.as_json, status: 201 }
+      end
     else
-      render 'new'
+      respond_to do |format|
+        format.html { render 'new' }
+        format.json { render json: {errors: @user.errors}.as_json, status: 422 }
+      end
     end
   end
 
