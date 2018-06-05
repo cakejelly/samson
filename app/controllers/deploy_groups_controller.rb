@@ -40,11 +40,20 @@ class DeployGroupsController < ApplicationController
 
   def create
     @deploy_group = DeployGroup.create(deploy_group_params)
+
     if @deploy_group.persisted?
-      flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
-      redirect_to action: :index
+      respond_to do |format|
+        format.html do
+          flash[:notice] = "Successfully created deploy group: #{@deploy_group.name}"
+          redirect_to action: :index
+        end
+        format.json { render json: @deploy_group.as_json, status: 201 }
+      end
     else
-      render :edit
+      respond_to do |format|
+        format.html { render :edit }
+        format.json { render json: {errors: @deploy_group.errors}.as_json, status: 422 }
+      end
     end
   end
 
@@ -64,10 +73,19 @@ class DeployGroupsController < ApplicationController
     if deploy_group.deploy_groups_stages.empty?
       deploy_group.soft_delete!(validate: false)
       flash[:notice] = "Successfully deleted deploy group: #{deploy_group.name}"
-      redirect_to action: :index
+      respond_to do |format|
+        format.html { redirect_to action: :index }
+        format.json { head :no_content }
+      end
     else
-      flash[:error] = "Deploy group is still in use."
-      redirect_to deploy_group
+      error_message = "Deploy group is still in use."
+      respond_to do |format|
+        format.html do
+          flash[:error] = error_message
+          redirect_to deploy_group
+        end
+        format.json { render json: {error: error_message}, status: 400 }
+      end
     end
   end
 
