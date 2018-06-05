@@ -54,9 +54,15 @@ class StagesController < ApplicationController
     @stage.attributes = stage_params
 
     if @stage.save
-      redirect_to [@project, @stage]
+      respond_to do |format|
+        format.html { redirect_to [@project, @stage] }
+        format.json { render json: @stage.as_json, status: 201 }
+      end
     else
-      render :new
+      respond_to do |format|
+        format.html { render :new }
+        format.json { render json: @stage.errors.as_json, status: 422 }
+      end
     end
   end
 
@@ -73,7 +79,10 @@ class StagesController < ApplicationController
 
   def destroy
     @stage.soft_delete!(validate: false)
-    redirect_to @project
+    respond_to do |format|
+      format.html { redirect_to @project }
+      format.json { head :no_content }
+    end
   end
 
   def reorder
